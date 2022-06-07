@@ -16,7 +16,7 @@ def load_data(config):
 
     # dates where we rebalance in backtest
     rebalance_dates = asset_prices.resample('Y').last().index[config['lookback_years']+1:-1]
-    return asset_returns, features, rebalance_dates
+    return asset_prices, asset_returns, features, rebalance_dates
 
 def zscore_euclidean(spot_feature, sampled_features):
     mu = sampled_features.mean()

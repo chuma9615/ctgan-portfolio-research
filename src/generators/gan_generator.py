@@ -1,18 +1,17 @@
-from normalizer import Normalizer
-import numpy as np
-import pandas as pd
+# Standard library imports
 import warnings
-import datetime as dt
 
-from sdv.tabular import CTGAN
-from sklearn.manifold import TSNE
+# Third party imports
 import hdbscan
-
-import matplotlib.pyplot as plt
+import pandas as pd
+from sdv.tabular import CTGAN
 from sklearn.decomposition import PCA
+from sklearn.manifold import TSNE
+
+# Local application imports
+from src.generators.normalizer import Normalizer
 
 warnings.filterwarnings("ignore")
-
 
 class CTGANGenerator():
 
@@ -28,7 +27,7 @@ class CTGANGenerator():
                            'discriminator_lr': 1e-4}
 
 
-    def generate_sample(self, sample_size, start_date, end_date, pca_construct=True):
+    def generate_sample(self, sample_size, start_date, end_date):
 
         model = CTGAN(**self.params)
         returns_interval = self.asset_returns.loc[
@@ -36,7 +35,7 @@ class CTGANGenerator():
         fit_cols = list(self.asset_returns.columns) + ['cluster']
         normalizer = None
         
-        if self.features:
+        if self.features is not None:
             returns_interval = returns_interval.join(self.features, how='left').fillna(method='ffill')
             normalizer = Normalizer()
             returns_interval = normalizer.normalize(returns_interval)
@@ -44,13 +43,13 @@ class CTGANGenerator():
 
 
         # Applies PCA
-        if pca_construct:
-            pca, returns_interval = self._construct_pca(returns_interval)
-            fit_cols = [f"C_{i}" for i in range(pca.n_components_)] + ['cluster']
+        pca, returns_interval = self._construct_pca(returns_interval)
+        fit_cols = [f"C_{i}" for i in range(pca.n_components_)] + ['cluster']
 
 
         # Dimensionality reduction
         returns_interval, X_embedded = self._reduce_dim(returns_interval)
+
 
         # Clusters definition
         returns_interval = self._define_clusters(returns_interval, X_embedded)
@@ -62,11 +61,10 @@ class CTGANGenerator():
         sample_val = sample.values
 
        # Reconstruct assets
-        if pca_construct:
-            sample_val = pca.inverse_transform(sample_val)
+        sample_val = pca.inverse_transform(sample_val)
         
         # De-normalizes
-        if self.features:
+        if self.features is not None:
             sample_val = normalizer.denormalize(sample_val)
 
 
@@ -81,13 +79,13 @@ class CTGANGenerator():
                                         index=returns_interval.index,
                                         columns=pca_cols)
 
-    def _reduce_dim(returns_interval, dims=2):
+    def _reduce_dim(self, returns_interval, dims=2):
         X_embedded = TSNE(n_components=dims, learning_rate='auto', init='pca').fit_transform(returns_interval)
         returns_interval['x'] = X_embedded[:, 0]
         returns_interval['y'] = X_embedded[:, 1]
         return returns_interval, X_embedded
 
-    def _define_clusters(returns_interval, X_embedded):
+    def _define_clusters(self, returns_interval, X_embedded):
         cluster_dim = max(10, int(len(returns_interval) * 0.005))
         clusterer = hdbscan.HDBSCAN(min_samples=cluster_dim, min_cluster_size=cluster_dim)
         clusterer.fit(X_embedded)

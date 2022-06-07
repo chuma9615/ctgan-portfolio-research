@@ -1,30 +1,20 @@
-import multiprocessing
-import pickle
-import random
-import matplotlib.pyplot as plt
-from matplotlib.gridspec import GridSpec
-import numpy as np
-import plotly.express as px
-import plotly.graph_objects as go
+# Third party imports
 import pandas as pd
-import seaborn as sns
-
 
 # Local imports
-from generators.historical_generator import HistoricalGenerator
-from generators.gan_generator import CTGANGenerator
-from metrics import compute_annualized_return, compute_cvar, compute_mean_hhi, compute_mean_rotation
-from uryasev_optimization import UryasevOptimization
-from utils import zscore_euclidean
-
-
+from src.generators.historical_generator import HistoricalGenerator
+from src.generators.gan_generator import CTGANGenerator
+from src.metrics import compute_annualized_return, compute_cvar, compute_mean_hhi, compute_mean_rotation
+from src.uryasev_optimization import UryasevOptimization
+from src.utils import zscore_euclidean
 
 
 class Backtester():
     '''
     Entity responsible of backtests
     '''
-    def __init__(self, asset_returns, config, rebalance_dates, features=None):
+    def __init__(self, asset_prices, asset_returns, config, rebalance_dates, features=None):
+        self.asset_prices = asset_prices
         self.asset_returns = asset_returns
         self.config = config
         self.rebalance_dates = rebalance_dates
@@ -72,8 +62,7 @@ class Backtester():
                 print(f"    {generator.name}: ")
                 sample = generator.generate_sample(sample_size=self.config['sample_size'],
                                                 start_date=start_date,
-                                                end_date=end_date,
-                                                pca_construct=True)
+                                                end_date=end_date)
                 samples[rebalance_date][generator.name] = sample
 
         return samples
@@ -106,7 +95,7 @@ class Backtester():
             for rebalance_date in rebalance_dates:
                 print(f"        {str(rebalance_date.date())}")
                 sample = samples[rebalance_date][model.name]
-                if self.features:
+                if self.features is not None:
                     density = self.compute_density(sample, rebalance_date)
                     sample_columns = self.asset_returns.columns.tolist() + self.features.columns.tolist()
                 else:
@@ -141,9 +130,10 @@ class Backtester():
             print(f"    {model.name}")
             backtests[model.name] = {}
             portfolios = historical_portfolios[model.name]
-            backtest = portfolios.reindex(self.asset_returns.index)
+            backtest = portfolios.reindex(self.asset_prices.index)
             backtest = backtest.fillna(method='ffill').dropna()
-            returns = self.asset_returns.reindex(backtest.index)
+            returns = self.asset_prices.pct_change()
+            returns = returns.reindex(backtest.index)
             backtest *= returns
             backtest /= 100
             backtest = backtest.sum(axis=1)

@@ -1,24 +1,26 @@
-def compute_annualized_return(self, serie):
+import numpy as np
+import pandas as pd
+
+
+def compute_annualized_return(serie):
     '''
     Calculates the annualized return of a serie.
     '''
     annualized_return = (((serie.iloc[-1]/serie.iloc[0])**(365/(len(serie))))-1)*100
     return annualized_return
 
-def compute_cvar(self, serie, alpha=0.95, tf=365):
+def compute_cvar(serie, alpha=0.95, tf=365):
     '''
     Calculates the ex post CVAR of a serie.
     '''
-    cvar = serie.pct_change(tf)
-    cvar = cvar.dropna()
-    cvar = cvar.sort_values()
+    cvar = serie.pct_change(tf).dropna().sort_values()
     var = np.percentile(cvar, 100 - 100*alpha)
     cvar = cvar[cvar<=var]
     cvar = cvar.mean() 
     cvar = -100 * cvar
     return cvar
         
-def compute_mean_hhi(self, portfolios):
+def compute_mean_hhi(portfolios):
     '''
     Calculates the diversification measure (HHI) for a set of historical portfolios.
     '''
@@ -34,7 +36,7 @@ def compute_mean_hhi(self, portfolios):
     mean_hhi = mean_hhi.mean()
     return mean_hhi
 
-def compute_mean_rotation(self, portfolios):
+def compute_mean_rotation(portfolios):
     '''
     Calculates the mean absolute rotation of the historical portfolios
     '''

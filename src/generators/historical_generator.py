@@ -1,6 +1,9 @@
+# Third party imports
 import numpy as np
+
+# Local application imports
 from ..utils import save_file
-from normalizer import Normalizer
+from src.generators.normalizer import Normalizer
 
 class HistoricalGenerator():
     """
