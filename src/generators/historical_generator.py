@@ -26,7 +26,9 @@ class HistoricalGenerator():
             normalizer = None
 
         total_windows = len(asset_returns_interval)
-        sample = np.random.choice(total_windows, sample_size, replace=False)
+        size = sample_size if sample_size < total_windows else total_windows
+
+        sample = np.random.choice(total_windows, size, replace=False)
         sample = asset_returns_interval.iloc[sample, :].reset_index(drop=True)
 
         if normalize_features:
