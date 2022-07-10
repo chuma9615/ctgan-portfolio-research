@@ -21,7 +21,7 @@ class UryasevOptimization():
         if density is None:
                 density = np.ones(len(sample))/len(sample)
         # our expected return will be the mean of the distribution
-        mu = sample.mean(axis=0)
+        mu = sample.T.dot(density)
         # start building the matrix for the linear optimization
         J = sample.shape[0]
         n = sample.shape[1]

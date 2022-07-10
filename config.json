@@ -1,9 +1,8 @@
 {
     "generate_multiple_backstests": false,
     "model_names": [
-        "historical",
-        "CTGAN"
-        ],
+        "historical"
+            ],
     "assets_path": "./src/data/asset_prices.csv",
     "features_path": "./src/data/features.csv",
     "plot_3d_points": false,
@@ -21,7 +20,7 @@
         0.0,
         1.0
     ],
-    "cvar": 0.1,
+    "cvar": 0.01,
     "cvar_range": [
         0.01,
         0.05,

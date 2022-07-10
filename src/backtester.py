@@ -20,7 +20,7 @@ class Backtester():
         self.rebalance_dates = rebalance_dates
         self.features = features
         self.lookback_years = config['lookback_years']
-        self.generators = self._instanciate_generators()
+        self.generators = self._instanciate_generators(config['model_names'])
         self.cvar = config['cvar']
         self.alpha = config['alpha']
         self.bounds = config['bounds']
@@ -159,8 +159,13 @@ class Backtester():
         
         return backtests
 
-    def _instanciate_generators(self):
-        historical_generator = HistoricalGenerator(asset_returns=self.asset_returns, features=self.features)
-        ctgan_generator = CTGANGenerator(asset_returns=self.asset_returns, features=self.features)
+    def _instanciate_generators(self, model_names):
+        generators = []
+        if 'historical' in model_names:
+            historical_generator = HistoricalGenerator(asset_returns=self.asset_returns, features=self.features)
+            generators.append(historical_generator)
+        if 'CTGAN' in model_names:
+            ctgan_generator = CTGANGenerator(asset_returns=self.asset_returns, features=self.features)
+            generators.append(ctgan_generator)
 
-        return historical_generator, ctgan_generator
+        return generators
